@@ -83,22 +83,81 @@ Do not publish:
 - family information,
 - private documents,
 - private conversations,
-- account identifiers.
+- account identifiers,
+- personal photo libraries,
+- face identities,
+- raw photo metadata.
 
 ### Business data
 
 Do not publish:
 
 - customer data,
+- partner data,
 - private employer information,
 - contracts,
 - pricing,
 - unpublished commercial data,
 - support cases,
 - private repositories,
-- confidential internal processes.
+- confidential internal processes,
+- real business-system records.
 
 Public case studies should explain the engineering problem, not leak somebody else's business.
+
+## Agent-specific boundaries
+
+### Automotive operations agent
+
+Public:
+
+- generic workflow shape,
+- architecture,
+- types of tasks,
+- deterministic vs agentic split.
+
+Private:
+
+- actual company identity,
+- customers,
+- partners,
+- vehicle records,
+- pricing,
+- finance details,
+- production data,
+- internal business rules that are not meant to be public.
+
+### Music agent
+
+Public:
+
+- request routing,
+- natural-language intent handling,
+- playback architecture.
+
+Private where applicable:
+
+- account credentials,
+- private listening data,
+- private service configuration,
+- internal endpoints.
+
+### Photo agent
+
+Public:
+
+- search architecture,
+- semantic retrieval approach,
+- local-first design.
+
+Always private:
+
+- actual photos,
+- face identities,
+- family information,
+- exact personal metadata,
+- private locations,
+- raw embeddings tied to identifiable people.
 
 ## Autonomy model
 
@@ -113,6 +172,9 @@ Safe examples:
 - check service state,
 - research,
 - summarize,
+- search photo metadata,
+- interpret music requests,
+- draft low-risk business content,
 - update low-risk documentation,
 - run normal API workflows,
 - perform reversible routine fixes.
@@ -163,6 +225,8 @@ Routing should consider:
 - cost,
 - whether external processing is necessary.
 
+Personal media is a strong candidate for local processing.
+
 The best model is not automatically the right model.
 
 ## Before making the repo public
@@ -174,7 +238,8 @@ Run this checklist:
 - [ ] Search for private IPs and hostnames.
 - [ ] Check diagrams for real network topology.
 - [ ] Check examples for personal information.
-- [ ] Check examples for employer/customer information.
+- [ ] Check examples for employer/customer/partner information.
+- [ ] Check for real photo metadata, names or locations.
 - [ ] Confirm no prompt or SOUL files slipped in.
 - [ ] Confirm no production config is present.
 - [ ] Review the full Git history.
