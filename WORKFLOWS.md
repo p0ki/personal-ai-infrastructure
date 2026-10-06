@@ -1,14 +1,16 @@
 # Workflows
 
-This document shows representative workflows from the system. They are intentionally described at a high level and do not expose private configuration, credentials or internal infrastructure details.
+A few examples of how work moves through the system.
+
+These are intentionally high-level and sanitized.
+
+No private infra details. No credentials. No "copy this and own my network" section.
 
 ## 1. Research → decision → knowledge
 
 ### Goal
 
-Turn an open question into a useful decision and preserve the result for later.
-
-### Flow
+Turn a vague question into something useful.
 
 ```mermaid
 flowchart LR
@@ -16,229 +18,255 @@ flowchart LR
     O --> R[Research Agent]
     R --> S[Sources]
     S --> C[Compare / Synthesize]
-    C --> H[Human Review]
-    H --> K[Knowledge Note]
+    C --> D[Decision / Recommendation]
+    D --> K[Knowledge Base]
 ```
 
-### Example
+### What happens
 
-A new model, framework or self-hosted tool looks interesting.
+1. The question gets routed to research.
+2. The agent collects useful sources.
+3. It compares the important differences.
+4. It strips away noise.
+5. It recommends what is worth testing.
+6. The useful result gets saved as reusable knowledge.
 
-The system can:
+Most of this runs autonomously.
 
-1. clarify what problem the tool might solve,
-2. research documentation, benchmarks and community feedback,
-3. compare it with the current setup,
-4. extract practical trade-offs,
-5. propose a small test,
-6. save the conclusion as reusable project knowledge.
-
-The important part is that research should end in an action or documented decision, not just another pile of links.
+Human input is useful when there is an actual decision to make, not because every intermediate step needs supervision.
 
 ---
 
-## 2. Infrastructure incident → diagnosis → runbook
+## 2. Infra problem → diagnose → fix → runbook
 
 ### Goal
 
-Troubleshoot methodically without giving an agent unrestricted operational control.
-
-### Flow
+Fix things without turning automation into a loaded gun.
 
 ```mermaid
 flowchart LR
     A[Alert / Symptom] --> C[Collect evidence]
     C --> I[Infrastructure Agent]
     I --> D[Diagnosis]
-    D --> P[Proposed next step]
-    P --> H{Risky change?}
-    H -->|Yes| U[Human approval]
-    H -->|No| X[Execute / Test]
-    U --> X
-    X --> V[Verify]
-    V --> R[Write runbook]
+    D --> N[Next action]
+    N --> R{High impact?}
+    R -->|No| AUTO[Run automatically]
+    R -->|Yes| H[Ask for approval]
+    AUTO --> V[Verify]
+    H --> V
+    V --> DOC[Write runbook]
 ```
 
-### Principles
+### Normal behavior
 
-- collect evidence before changing things,
-- work one diagnostic step at a time,
-- prefer reversible actions,
-- separate observation from remediation,
-- require confirmation for destructive or security-sensitive changes,
-- document the final cause and fix.
+The agent can autonomously:
 
-This turns one incident into knowledge that reduces future troubleshooting time.
+- inspect logs,
+- query service state,
+- run health checks,
+- compare configs,
+- test connectivity,
+- perform routine reversible fixes,
+- verify whether the issue is resolved.
 
----
+Approval is only needed when the next step could:
 
-## 3. Idea → prototype → repository
+- delete data,
+- break networking,
+- affect security,
+- cause downtime,
+- touch production in a risky way,
+- affect accounts or money.
 
-### Goal
-
-Move quickly from an idea to something testable without skipping structure.
-
-### Flow
-
-1. Capture the idea in plain language.
-2. Define the smallest useful outcome.
-3. Identify constraints and dependencies.
-4. Let the coding agent inspect the relevant repository or prepare a new implementation plan.
-5. Build a small working version.
-6. Test against the original problem.
-7. Commit the change with documentation.
-8. Record what worked, what failed and what should happen next.
-
-### Where AI helps
-
-AI is useful for:
-
-- turning rough ideas into requirements,
-- codebase navigation,
-- implementation options,
-- debugging,
-- test generation,
-- documentation,
-- reviewing changes.
-
-The human still decides whether the result actually solves the real problem.
+That keeps the workflow fast without pretending risk does not exist.
 
 ---
 
-## 4. Repeated manual task → deterministic automation
+## 3. Idea → prototype → repo
 
 ### Goal
 
-Avoid using an LLM for work that has become predictable.
+Turn "what if..." into working software quickly.
 
 ### Flow
+
+1. Capture the idea.
+2. Define the smallest useful version.
+3. Identify constraints.
+4. Inspect the relevant repo.
+5. Build.
+6. Test.
+7. Fix what broke.
+8. Commit.
+9. Update docs.
+10. Repeat.
+
+The coding agent can handle most of this on its own inside the repository.
+
+A human only needs to step in when the change crosses an important boundary: deployment, destructive behavior, sensitive systems or a major product decision.
+
+---
+
+## 4. Repeated task → deterministic automation
+
+### Goal
+
+Stop wasting LLM tokens on jobs that are basically a shell script wearing sunglasses.
 
 ```mermaid
 flowchart LR
-    M[Manual recurring task] --> O[Observe pattern]
+    M[Manual task] --> O[Observe pattern]
     O --> R{Rules stable?}
     R -->|No| A[Keep agent-assisted]
-    R -->|Yes| D[Build deterministic workflow]
+    R -->|Yes| D[Make deterministic]
     D --> N[n8n / Script / API]
-    N --> E[Monitor exceptions]
+    N --> E[Agent handles exceptions]
 ```
 
-### Example pattern
+A workflow might start agentic because the rules are unclear.
 
-A workflow may start as:
+After enough repetitions, patterns appear.
 
-> "Read this input, decide what category it belongs to, then do the correct action."
+Then:
 
-After enough use, most categories may become deterministic.
-
-At that point:
-
-- fixed rules handle known cases,
-- the agent only sees ambiguous exceptions,
-- cost and latency drop,
-- behavior becomes easier to test.
-
-This is one of the main architectural ideas behind the system.
+- known cases become rules,
+- edge cases stay agentic,
+- cost drops,
+- latency drops,
+- debugging gets easier.
 
 ---
 
-## 5. Knowledge capture after completed work
+## 5. Knowledge capture after real work
 
 ### Goal
 
-Prevent useful solutions from disappearing inside chat history.
+Make sure the next version of me does not have to rediscover the same fix six months later.
 
-### Flow
-
-After a meaningful task is completed, the knowledge workflow can create a concise record containing:
+After a useful task is completed, the system can store:
 
 - the original problem,
 - relevant context,
-- what was tested,
+- what was tried,
 - what failed,
-- the final solution,
-- verification steps,
-- follow-up work.
+- what worked,
+- how it was verified,
+- what should happen next.
 
-The result is stored in a structured knowledge base such as Obsidian.
+That becomes a note, runbook or project decision.
 
-This is particularly useful for infrastructure incidents, project decisions and recurring technical procedures.
+Useful especially for:
+
+- infrastructure incidents,
+- weird bugs,
+- architecture decisions,
+- experiments,
+- one-off setup procedures.
 
 ---
 
-## 6. Local AI for private technical assistance
+## 6. Local AI for private technical work
 
 ### Goal
 
-Use AI close to the data when cloud processing is unnecessary or undesirable.
+Keep some workloads close to the data.
 
-### Flow
+A local client talks to a local model endpoint.
 
-A local client or tool sends a request to a local model endpoint.
+Useful for:
 
-Typical uses include:
-
-- quick technical questions,
-- working with local notes,
-- experimentation,
+- local notes,
 - private context,
-- offline or low-latency assistance.
+- quick technical questions,
+- experimentation,
+- offline use,
+- lightweight high-volume tasks.
 
-For harder reasoning or coding tasks, the orchestrator can instead route the problem to a stronger cloud model.
+If the task becomes too hard for the local model, the orchestrator can route it to a stronger cloud model.
 
-The user does not need to think in terms of "which model should I use?" for every task. Model choice becomes part of the workflow.
+The user should not need to manually babysit model selection every time.
 
 ---
 
-## 7. Agent-assisted development with human review
+## 7. Agent-assisted development
 
 ### Goal
 
-Use AI as an active development partner while preserving control over production changes.
+Use AI like a technical teammate, not a slot machine.
 
-A typical sequence is:
+Typical loop:
 
-1. inspect the repository,
-2. understand the issue,
-3. propose the implementation,
-4. make a versioned change,
-5. inspect the diff,
-6. run available tests or checks,
-7. review the result,
-8. merge or deploy only after approval.
+1. inspect repo,
+2. understand issue,
+3. identify relevant files,
+4. propose or make a change,
+5. inspect diff,
+6. run tests/checks,
+7. fix failures,
+8. commit,
+9. update docs.
 
-This keeps development fast while retaining traceability through Git and explicit review points.
+Routine work can be autonomous.
+
+Higher-risk steps such as deployment or destructive production changes remain gated.
 
 ---
 
-## 8. Notification and lightweight interaction
+## 8. Lightweight control from messaging
 
-Not every interaction needs a full desktop interface.
+Not every task needs a full dashboard.
 
-A lightweight messaging interface can be useful for:
+A messaging interface can be enough for:
 
-- receiving summaries,
-- triggering known workflows,
 - checking status,
-- approving a proposed action,
-- getting alerts from automated processes.
+- triggering known workflows,
+- receiving summaries,
+- seeing alerts,
+- approving the occasional high-impact action.
 
-The messaging layer should remain an interface, not an unrestricted administrative backdoor.
+The messaging layer is an interface, not unrestricted admin access.
 
 ---
 
-## Workflow design rule
+## 9. Autonomous workflow chain
 
-A useful way to decide how much autonomy a workflow should have is:
+A typical autonomous chain can look like this:
 
-| Situation | Preferred approach |
+```text
+trigger
+  ↓
+orchestrator
+  ↓
+specialist agent
+  ↓
+tools / APIs
+  ↓
+verification
+  ↓
+documentation
+```
+
+If every step stays inside low-risk boundaries, no human intervention is needed.
+
+If the workflow hits a high-impact step, it pauses and asks.
+
+That is the autonomy model in one sentence:
+
+> Run freely inside the sandbox. Ask before kicking down a wall.
+
+## Workflow rule of thumb
+
+| Situation | Best fit |
 |---|---|
-| Clear rules, stable inputs | Deterministic automation |
-| Unstructured input, low-risk output | Agent can act more independently |
-| Complex reasoning, reversible result | Agent + review |
-| External communication | Draft first, confirm before sending |
-| Infrastructure write action | Diagnose first, confirm before change |
-| Destructive or security-sensitive action | Explicit human approval |
-| Repeated agent decision becomes predictable | Convert it into a rule |
+| Clear rules | Deterministic automation |
+| Messy input | Agent |
+| Routine low-risk task | Autonomous |
+| Reversible technical fix | Usually autonomous |
+| Complex reasoning | Agent |
+| External action with consequences | Approval |
+| Destructive infra change | Approval |
+| Stable repeated agent decision | Turn it into a rule |
 
-The objective is not to maximize the number of agents. It is to use the simplest reliable mechanism for each part of the system.
+The goal is not "more agents."
+
+The goal is fewer stupid manual steps.
