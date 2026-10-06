@@ -1,175 +1,192 @@
 # Security and Publication Boundary
 
-This repository is designed to be safe to share as an **architecture case study**.
+This repo is meant to be safe enough to publish without publishing the keys to the castle.
 
-It explains how the system is structured without publishing the information required to access, reproduce or attack the private environment behind it.
+It shows the architecture and the thinking behind the system.
 
-## Public by design
+It does **not** show the operational details someone would need to reproduce, access or attack the real environment.
 
-The following kinds of information are appropriate for this repository:
+## Safe to show
+
+Things that are fine to publish:
 
 - high-level architecture,
-- agent responsibilities,
-- routing concepts,
-- deterministic vs agentic workflow design,
-- generic tool categories,
-- model-selection strategy,
-- human-in-the-loop principles,
-- representative workflows,
-- lessons learned,
-- non-sensitive diagrams.
+- agent roles,
+- routing logic,
+- local vs cloud strategy,
+- generic integrations,
+- workflow patterns,
+- approval philosophy,
+- sanitized diagrams,
+- lessons learned.
 
-These details show how the system is designed without exposing operational access.
+That is enough to show how the system works without leaking the system itself.
 
-## Intentionally private
+## Keep private
 
-The following information must not be committed here.
+### Secrets
 
-### Credentials and secrets
-
-Never publish:
+Never commit:
 
 - API keys,
-- access tokens,
+- tokens,
 - passwords,
 - private keys,
-- session cookies,
+- cookies,
+- OAuth secrets,
 - webhook secrets,
-- OAuth credentials,
 - recovery codes,
-- environment files containing secrets.
+- secret-filled environment files.
 
-### Network and infrastructure details
+Obvious rule, still worth writing down.
+
+### Real infrastructure details
 
 Keep private:
 
-- internal IP addresses,
+- internal IPs,
 - private DNS names,
-- remote-access configuration,
-- VPN configuration,
-- firewall rules that reveal the private topology,
-- exposed management ports,
-- exact host mappings,
-- credentials or connection strings,
-- backup locations that reveal sensitive structure.
+- remote-access config,
+- VPN config,
+- firewall rules that expose topology,
+- management ports,
+- host mappings,
+- connection strings,
+- backup locations that reveal too much,
+- exact service-to-service paths.
 
-Architecture can be described conceptually without exposing the real network map.
+A diagram should explain the architecture, not double as recon material.
 
 ### Agent internals
 
 Keep private:
 
 - full system prompts,
-- private SOUL/personality files,
-- hidden policy files,
-- exact authorization rules,
+- SOUL/personality files,
+- hidden policies,
+- exact internal authorization rules,
 - private memory stores,
-- internal tool credentials,
-- instructions containing personal or business context.
+- tool credentials,
+- prompts containing personal or business context.
 
-Agent roles can be explained publicly at the level of purpose and behavior.
+The public repo explains what the agents do.
 
-### Personal knowledge
+It does not publish their full brains.
+
+### Personal data
 
 Do not publish:
 
-- private Obsidian notes,
+- private notes,
 - email content,
 - calendar data,
 - family information,
-- personal documents,
+- private documents,
 - private conversations,
 - account identifiers.
 
-Examples in this repository should remain generic or deliberately sanitized.
+### Business data
 
-### Business information
-
-Do not publish information that belongs to an employer, customer or partner, including:
+Do not publish:
 
 - customer data,
-- internal processes that are confidential,
+- private employer information,
 - contracts,
 - pricing,
-- credentials,
+- unpublished commercial data,
+- support cases,
 - private repositories,
-- unpublished commercial information,
-- internal support cases.
+- confidential internal processes.
 
-Case studies should describe the problem-solving approach without exposing confidential data.
+Public case studies should explain the engineering problem, not leak somebody else's business.
 
-## Human approval boundary
+## Autonomy model
 
-The system uses a simple security principle:
+The system is **autonomous by default**.
 
-> The ability to reason about an action does not automatically grant permission to perform that action.
+That means routine work should not stop and ask for permission every five minutes.
 
-A model may be allowed to:
+Safe examples:
 
-- inspect information,
+- read logs,
+- run diagnostics,
+- check service state,
+- research,
 - summarize,
-- diagnose,
-- draft a change,
-- recommend a command,
-- prepare a message,
+- update low-risk documentation,
+- run normal API workflows,
+- perform reversible routine fixes.
 
-without automatically being allowed to:
+Approval kicks in when the blast radius becomes meaningful.
 
-- delete data,
-- change production configuration,
-- publish externally,
-- send a message,
-- modify security settings,
-- perform financial actions.
+Examples:
 
-This separation limits the consequences of an incorrect model decision.
+- deleting important data,
+- major firewall/network changes,
+- destructive storage operations,
+- risky production changes,
+- publishing externally,
+- external communication with consequences,
+- financial or account actions.
+
+The principle is simple:
+
+> Autonomy for normal work. Approval for actions that can actually hurt.
 
 ## Least necessary access
 
-Each integration should receive only the permissions it actually needs.
+Agents should get the tools they need, not god mode.
 
 Where practical:
 
-- read and write capabilities are separated,
-- credentials are scoped,
-- write actions are approval-gated,
+- read and write scopes are separated,
+- credentials are narrow,
+- high-impact writes are gated,
+- version history is preserved,
 - reversible actions are preferred,
-- Git/version history is preserved,
-- logs are retained for troubleshooting.
+- logs exist,
+- backups exist.
+
+A smart model with narrow permissions is usually safer than a mediocre model with root.
 
 ## Local vs cloud privacy
 
-Local models can be useful when information should stay close to the source.
+Local models are useful when data should stay local.
 
-Cloud models can provide stronger capabilities, but data sent to them should be deliberately selected.
+Cloud models are useful when stronger capabilities matter.
 
-The routing layer should therefore consider not only model quality, but also:
+Routing should consider:
 
-- sensitivity of the input,
-- required capability,
+- sensitivity,
+- task difficulty,
 - latency,
 - cost,
-- and whether external processing is necessary.
+- whether external processing is necessary.
 
-## Before making this repository public
+The best model is not automatically the right model.
 
-Use this checklist:
+## Before making the repo public
 
-- [ ] Search all files for API keys, tokens and passwords.
-- [ ] Search for private IP addresses and internal hostnames.
+Run this checklist:
+
+- [ ] Search every file for API keys and tokens.
+- [ ] Search for emails and account IDs.
+- [ ] Search for private IPs and hostnames.
 - [ ] Check diagrams for real network topology.
-- [ ] Remove personal data and account identifiers.
-- [ ] Remove employer/customer confidential information.
-- [ ] Confirm that examples are generic or sanitized.
-- [ ] Confirm no prompt/SOUL files were copied in.
-- [ ] Confirm no real configuration or environment files are present.
-- [ ] Review Git history, not only the current files.
-- [ ] Review rendered Mermaid diagrams.
-- [ ] Open every external link before publication.
-- [ ] Read the repository once as if you were an attacker or recruiter.
+- [ ] Check examples for personal information.
+- [ ] Check examples for employer/customer information.
+- [ ] Confirm no prompt or SOUL files slipped in.
+- [ ] Confirm no production config is present.
+- [ ] Review the full Git history.
+- [ ] Check rendered Mermaid diagrams.
+- [ ] Review external links.
+- [ ] Read the repo once like a recruiter.
+- [ ] Read it again like an attacker.
 
-## Repository rule
+## One rule that covers most of this
 
-If a detail makes the architecture easier to understand but also makes the private environment easier to access, the detail stays private.
+If a detail makes the system easier to understand **and** makes the real environment easier to attack, it stays private.
 
-The public repository should demonstrate **how I think about AI systems**, not expose the system itself.
+This repo should show how I think.
+
+It should not show how to get in.
