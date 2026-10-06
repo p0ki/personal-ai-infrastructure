@@ -16,12 +16,18 @@ flowchart LR
     O -->|Knowledge| K[Knowledge Agent]
     O -->|Infrastructure| I[Infrastructure Agent]
     O -->|Development| C[Coding Agent]
+    O -->|Business operations| B[Automotive Operations Agent]
+    O -->|Music| M[Music Agent]
+    O -->|Photos| P[Photo Agent]
     O -->|Known workflow| D[Deterministic Automation]
 
     R --> S[Search / Sources / APIs]
     K --> OB[Obsidian / Docs]
     I --> INF[Logs / Services / Infra Tools]
     C --> GH[GitHub / Dev Tools]
+    B --> BO[CRM / Business Workflows / Reporting]
+    M --> MU[Music / Playback / Discovery]
+    P --> PH[Photo Library / Metadata / Semantic Search]
     D --> N[n8n / Scripts / APIs]
 
     LM[Local Models] <--> O
@@ -150,7 +156,78 @@ For normal repository work, it can operate autonomously inside defined boundarie
 
 High-impact actions such as destructive changes, publishing, deployment or touching sensitive production systems can still be approval-gated.
 
-## 6. Deterministic automation
+## 6. Automotive operations agent
+
+This specialist connects business operations with software and automation.
+
+It works around a real vehicle-sales process without exposing the actual company or private production data.
+
+Typical responsibilities:
+
+- follow a vehicle through its lifecycle,
+- keep operational states in sync,
+- support CRM and lead handling,
+- prepare listing and marketing content,
+- assist with partner/customer workflows,
+- surface finance and reporting context,
+- detect missing or inconsistent information,
+- hand predictable work to deterministic automations.
+
+A lot of the workflow is not "AI magic."
+
+It is normal software plus structured data plus automation.
+
+The agent is useful where the input becomes fuzzy: prioritization, drafting, exceptions, unusual customer/partner situations and cross-system context.
+
+## 7. Music agent
+
+The music agent is a natural-language layer over music discovery and playback.
+
+Typical responsibilities:
+
+- interpret vague music requests,
+- understand mood and intent,
+- choose suitable music,
+- translate natural language into playback actions,
+- use deterministic paths for exact commands,
+- connect playback with automations and smart-home workflows.
+
+Example:
+
+```text
+"Play Artist - Song"
+        ↓
+deterministic command
+
+"Play something energetic but not cheesy"
+        ↓
+Music Agent → choice → playback
+```
+
+The agent only handles the part that benefits from interpretation.
+
+## 8. Photo agent
+
+The photo agent works over a private photo library.
+
+Typical responsibilities:
+
+- natural-language retrieval,
+- metadata search,
+- face-aware retrieval,
+- semantic search,
+- visual descriptions,
+- combining time, people, place and visual context.
+
+The core challenge is not just "classify an image."
+
+It is turning a large personal archive into something searchable in human language.
+
+This workload is strongly local-first because the source material can contain sensitive family data.
+
+No actual photos, face identities or private metadata belong in the public repo.
+
+## 9. Deterministic automation
 
 This is the non-glamorous part, which is also why it is important.
 
@@ -186,7 +263,7 @@ That usually means:
 - easier debugging,
 - more predictable behavior.
 
-## 7. Model routing
+## 10. Model routing
 
 The model layer is deliberately replaceable.
 
@@ -199,7 +276,8 @@ Useful for:
 - low-latency tasks,
 - local service integration,
 - offline work,
-- repeated lightweight calls.
+- repeated lightweight calls,
+- personal photo/media processing.
 
 ### Cloud models
 
@@ -213,7 +291,7 @@ Useful for:
 
 The system chooses the model based on the task instead of forcing every task through the same model.
 
-## 8. Tool layer
+## 11. Tool layer
 
 Agents get useful capabilities through constrained tool interfaces.
 
@@ -224,7 +302,10 @@ Examples:
 - application APIs,
 - knowledge-base connectors,
 - local service APIs,
-- n8n workflows.
+- n8n workflows,
+- business-system APIs,
+- media-control interfaces,
+- local photo search/indexing services.
 
 The important bit:
 
@@ -232,7 +313,7 @@ The important bit:
 
 A model can be smart enough to understand a destructive command without automatically being allowed to run it.
 
-## 9. Autonomy and approval
+## 12. Autonomy and approval
 
 The default mode is autonomous.
 
@@ -245,6 +326,9 @@ A simplified policy looks like this:
 | Read logs | Autonomous |
 | Search docs | Autonomous |
 | Summarize notes | Autonomous |
+| Search photo metadata | Autonomous |
+| Interpret a music request | Autonomous |
+| Draft listing/marketing content | Autonomous |
 | Update low-risk docs | Autonomous |
 | Run health checks | Autonomous |
 | Routine API workflow | Autonomous |
@@ -257,7 +341,7 @@ A simplified policy looks like this:
 
 This keeps the system useful without making it reckless.
 
-## 10. Knowledge feedback loop
+## 13. Knowledge feedback loop
 
 Solved problems should improve the next attempt.
 
@@ -276,9 +360,11 @@ Examples:
 - incident → runbook,
 - research → decision note,
 - recurring manual process → automation,
-- coding pattern → project docs.
+- coding pattern → project docs,
+- business exception → better workflow rule,
+- failed media query → better routing/retrieval.
 
-## 11. Failure containment
+## 14. Failure containment
 
 Models will eventually be wrong.
 
@@ -294,13 +380,14 @@ Useful safeguards:
 - backups,
 - logs,
 - approval for high-impact actions,
-- deterministic automation for repeatable tasks.
+- deterministic automation for repeatable tasks,
+- local processing for sensitive data where practical.
 
 The goal is not perfect agents.
 
 The goal is a system that fails in boring, recoverable ways.
 
-## 12. Current direction
+## 15. Current direction
 
 Current experiments include:
 
@@ -311,6 +398,9 @@ Current experiments include:
 - richer tool use,
 - autonomous task chains,
 - better memory,
+- photo retrieval,
+- media intent understanding,
+- business workflow agents,
 - better exception handling,
 - clearer boundaries between agentic and deterministic work.
 
