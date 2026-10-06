@@ -82,7 +82,113 @@ That keeps the workflow fast without pretending risk does not exist.
 
 ---
 
-## 3. Idea → prototype → repo
+## 3. Business operations → structured workflow + agent
+
+### Goal
+
+Use AI where human-ish context helps without turning the whole business system into a chatbot.
+
+```mermaid
+flowchart LR
+    V[Operational event] --> SYS[Business System]
+    SYS --> RULES[Deterministic Rules]
+    SYS --> AG[Automotive Operations Agent]
+    RULES --> SYNC[Sync / Update / Trigger]
+    AG --> CTX[Draft / Prioritize / Handle exception]
+    CTX --> SYNC
+```
+
+### Typical split
+
+Deterministic layer:
+
+- state changes,
+- data synchronization,
+- validation,
+- calculations,
+- known triggers,
+- repeatable API calls.
+
+Agentic layer:
+
+- draft customer-facing content,
+- reason about unusual cases,
+- summarize history,
+- prioritize follow-up,
+- help with partner/customer context,
+- explain what needs attention.
+
+The business process stays structured. The agent fills the gaps where rigid rules get awkward.
+
+---
+
+## 4. Natural-language music request → playback
+
+### Goal
+
+Make music control feel human without making simple commands unnecessarily complicated.
+
+```mermaid
+flowchart LR
+    Q[Music request] --> C{Exact command?}
+    C -->|Yes| D[Deterministic playback]
+    C -->|No| M[Music Agent]
+    M --> S[Interpret mood / intent]
+    S --> P[Choose music]
+    P --> D
+```
+
+Examples:
+
+```text
+"Play Artist - Song"
+→ direct playback
+
+"Give me something chill for the terrace"
+→ interpret context → choose → play
+```
+
+The agent deals with taste, ambiguity and context.
+
+The playback layer stays deterministic.
+
+---
+
+## 5. Photo question → private semantic search
+
+### Goal
+
+Search a large personal photo library in normal language.
+
+```mermaid
+flowchart LR
+    Q[Photo question] --> P[Photo Agent]
+    P --> M[Metadata]
+    P --> F[Face context]
+    P --> V[Visual / Semantic index]
+    M --> R[Ranked results]
+    F --> R
+    V --> R
+```
+
+The query might contain a mix of:
+
+- rough date,
+- people,
+- place,
+- event,
+- visual content,
+- vague memory.
+
+The photo agent combines those signals instead of requiring perfect tags.
+
+Because the source is personal, the design is local-first where practical.
+
+No actual personal photo data belongs in this repo.
+
+---
+
+## 6. Idea → prototype → repo
 
 ### Goal
 
@@ -107,7 +213,7 @@ A human only needs to step in when the change crosses an important boundary: dep
 
 ---
 
-## 4. Repeated task → deterministic automation
+## 7. Repeated task → deterministic automation
 
 ### Goal
 
@@ -137,7 +243,7 @@ Then:
 
 ---
 
-## 5. Knowledge capture after real work
+## 8. Knowledge capture after real work
 
 ### Goal
 
@@ -165,7 +271,7 @@ Useful especially for:
 
 ---
 
-## 6. Local AI for private technical work
+## 9. Local AI for private technical work
 
 ### Goal
 
@@ -180,15 +286,16 @@ Useful for:
 - quick technical questions,
 - experimentation,
 - offline use,
-- lightweight high-volume tasks.
+- lightweight high-volume tasks,
+- sensitive personal media workflows.
 
-If the task becomes too hard for the local model, the orchestrator can route it to a stronger cloud model.
+If the task becomes too hard for the local model, the orchestrator can route it to a stronger cloud model when appropriate.
 
 The user should not need to manually babysit model selection every time.
 
 ---
 
-## 7. Agent-assisted development
+## 10. Agent-assisted development
 
 ### Goal
 
@@ -212,7 +319,7 @@ Higher-risk steps such as deployment or destructive production changes remain ga
 
 ---
 
-## 8. Lightweight control from messaging
+## 11. Lightweight control from messaging
 
 Not every task needs a full dashboard.
 
@@ -222,13 +329,14 @@ A messaging interface can be enough for:
 - triggering known workflows,
 - receiving summaries,
 - seeing alerts,
+- requesting music,
 - approving the occasional high-impact action.
 
 The messaging layer is an interface, not unrestricted admin access.
 
 ---
 
-## 9. Autonomous workflow chain
+## 12. Autonomous workflow chain
 
 A typical autonomous chain can look like this:
 
@@ -262,6 +370,10 @@ That is the autonomy model in one sentence:
 | Messy input | Agent |
 | Routine low-risk task | Autonomous |
 | Reversible technical fix | Usually autonomous |
+| Business exception / prioritization | Agent |
+| Vague music request | Agent |
+| Exact playback command | Deterministic |
+| Personal photo retrieval | Local-first agent/search |
 | Complex reasoning | Agent |
 | External action with consequences | Approval |
 | Destructive infra change | Approval |
