@@ -1,253 +1,317 @@
 # Architecture
 
-## Overview
+This is the slightly more technical version of the README.
 
-The system is built as a small collection of specialized AI roles around a central orchestrator.
+The system is built around one idea:
 
-The architecture is intentionally hybrid:
+> Let agents handle context. Let deterministic systems handle rules. Let humans step in only when the consequences justify it.
 
-- deterministic automation for predictable work,
-- specialized agents for tasks that need interpretation,
-- local and cloud models selected by task,
-- structured tool access through APIs and connectors,
-- and explicit human approval boundaries.
-
-The goal is not maximum autonomy. The goal is **useful autonomy with understandable boundaries**.
-
-## High-level architecture
+## High-level map
 
 ```mermaid
 flowchart LR
     U[User / Interface] --> O[Orchestrator]
 
-    O -->|Research task| R[Research Agent]
-    O -->|Knowledge task| K[Knowledge / Librarian Agent]
-    O -->|Operational task| I[Infrastructure Agent]
-    O -->|Development task| C[Coding Agent]
-    O -->|Known repeatable process| D[Deterministic Workflow]
+    O -->|Research| R[Research Agent]
+    O -->|Knowledge| K[Knowledge Agent]
+    O -->|Infrastructure| I[Infrastructure Agent]
+    O -->|Development| C[Coding Agent]
+    O -->|Known workflow| D[Deterministic Automation]
 
-    R --> X[Web / Sources / Search]
-    K --> OB[Obsidian / Documentation]
-    I --> INF[Infrastructure Tools]
+    R --> S[Search / Sources / APIs]
+    K --> OB[Obsidian / Docs]
+    I --> INF[Logs / Services / Infra Tools]
     C --> GH[GitHub / Dev Tools]
-    D --> N8N[n8n / APIs]
+    D --> N[n8n / Scripts / APIs]
 
     LM[Local Models] <--> O
     CM[Cloud Models] <--> O
 
-    O --> A{Approval needed?}
-    A -->|Yes| H[Human confirmation]
-    A -->|No| E[Execute / Return result]
-    H --> E
+    O --> RISK{Blast radius?}
+    RISK -->|Low / routine| AUTO[Run autonomously]
+    RISK -->|High / destructive| APPROVE[Ask for approval]
+    AUTO --> RESULT[Result]
+    APPROVE --> RESULT
 ```
 
 ## 1. Orchestrator
 
-The orchestrator is the control layer.
+The orchestrator is the router.
 
-It receives a request and decides how it should be handled. A useful routing decision usually includes five questions:
+Its job is to answer a few boring but important questions:
 
-1. **What is the actual intent?**
-2. **Is this a known workflow or an open-ended problem?**
-3. **Which specialist needs to handle it?**
-4. **Which tools and model class are appropriate?**
-5. **Does any step require explicit approval?**
+1. What is the actual task?
+2. Is this a known workflow or a fuzzy problem?
+3. Which agent should own it?
+4. Which model is the best fit?
+5. Which tools does it need?
+6. Can it run safely on its own?
 
-The orchestrator should keep its own role relatively small. It coordinates; it should not accumulate every specialist instruction and every piece of domain context.
+The orchestrator should stay relatively lean.
 
-## 2. Specialized agents
+If every domain rule, every tool instruction and every bit of context lives in one place, the system slowly turns into prompt lasagna.
 
-### Research agent
+Specialists keep the contexts smaller and easier to reason about.
 
-Optimized for discovery and synthesis rather than operational execution.
+## 2. Research agent
 
-Typical tasks:
+The research agent deals with uncertainty.
 
-- compare technologies,
-- investigate a technical problem,
+Typical jobs:
+
+- investigate a technical topic,
+- compare tools or models,
 - collect sources,
-- summarize long material,
-- identify trade-offs,
-- prepare a shortlist for testing.
+- summarize docs and discussions,
+- surface trade-offs,
+- prepare a shortlist,
+- recommend what is worth testing.
 
-Its output is usually a recommendation, brief or structured note rather than a direct infrastructure change.
+Its output is usually not "the final truth."
 
-### Knowledge / librarian agent
+It is a compact, useful map of the problem space.
 
-Responsible for turning temporary conversations into durable knowledge.
+## 3. Knowledge agent
 
-Typical tasks:
+The knowledge agent is there because useful work has a bad habit of disappearing into old chats.
 
-- retrieve relevant notes,
-- connect new findings with existing projects,
-- normalize documentation,
-- prepare runbooks,
-- summarize completed work,
-- reduce duplicated information.
+Typical jobs:
 
-This role helps keep the knowledge base useful instead of allowing it to become a passive archive.
+- find relevant notes,
+- connect new work to old work,
+- clean up documentation,
+- create runbooks,
+- summarize finished tasks,
+- reduce duplicated knowledge,
+- keep project context reusable.
 
-### Infrastructure agent
+This is the bridge between short-lived conversations and long-lived knowledge.
 
-Handles operational reasoning around self-hosted services, containers, Linux and networking.
+## 4. Infrastructure agent
 
-Typical tasks:
+The infrastructure agent handles operational work around Linux, containers, networking and self-hosted services.
 
-- inspect symptoms and logs,
-- propose diagnostic steps,
-- interpret command output,
-- narrow likely causes,
-- prepare safe remediation steps,
-- turn solved incidents into runbooks.
+Typical jobs:
 
-A key design rule is that diagnosis and action are separate. The agent may be able to propose a change without being allowed to apply it automatically.
+- collect logs,
+- inspect service state,
+- run diagnostics,
+- compare expected and actual behavior,
+- restart or repair low-risk services,
+- verify health,
+- document incidents.
 
-### Coding agent
+### Autonomy model
 
-Handles software and repository work.
-
-Typical tasks:
-
-- understand a codebase,
-- find the relevant implementation area,
-- propose a change,
-- debug failures,
-- prepare or review patches,
-- work with Git history,
-- keep documentation aligned with implementation.
-
-The coding agent is part of a larger workflow rather than an isolated code generator. Requirements, operations and documentation can all feed into its context.
-
-## 3. Deterministic workflows
-
-Not every problem should become an agent.
-
-If a task has stable inputs, clear rules and predictable outputs, a deterministic workflow is usually preferable.
+Routine checks and low-risk operations can run autonomously.
 
 Examples:
 
-- scheduled data collection,
-- moving structured information between systems,
-- notifications,
-- simple health checks,
-- known file transformations,
-- repeatable API calls.
+- status checks,
+- log inspection,
+- health checks,
+- read-only diagnostics,
+- safe service queries,
+- reversible routine fixes.
 
-Tools such as n8n, scripts and direct API integrations are used for this layer.
+Approval is required only when the next step has meaningful blast radius.
 
-The practical rule is:
+Examples:
 
-> If the same decision can be expressed as a reliable rule, remove the LLM from that part of the workflow.
+- deleting data,
+- changing core network/security rules,
+- risky production changes,
+- destructive storage operations,
+- anything likely to cause downtime,
+- actions with financial or account impact.
 
-This reduces cost, latency and unpredictable behavior.
+The idea is not "human in the loop everywhere."
 
-## 4. Model routing
+The idea is **human in the loop where it matters**.
 
-The architecture does not assume that one model should handle every task.
+## 5. Coding agent
+
+The coding agent handles software work.
+
+Typical jobs:
+
+- inspect repositories,
+- understand project structure,
+- trace bugs,
+- propose changes,
+- edit files,
+- prepare patches,
+- review diffs,
+- run tests,
+- update documentation,
+- work with Git history.
+
+For normal repository work, it can operate autonomously inside defined boundaries.
+
+High-impact actions such as destructive changes, publishing, deployment or touching sensitive production systems can still be approval-gated.
+
+## 6. Deterministic automation
+
+This is the non-glamorous part, which is also why it is important.
+
+Agents are useful when the input is messy.
+
+They are not a replacement for:
+
+- cron,
+- scripts,
+- API calls,
+- event triggers,
+- validation rules,
+- state machines,
+- normal software.
+
+If a repeated workflow becomes predictable, I try to move that part out of the LLM.
+
+Example:
+
+```text
+Before:
+LLM decides everything
+
+After:
+Rule handles 90%
+Agent sees only the weird 10%
+```
+
+That usually means:
+
+- lower cost,
+- lower latency,
+- easier debugging,
+- more predictable behavior.
+
+## 7. Model routing
+
+The model layer is deliberately replaceable.
 
 ### Local models
 
-Preferred when one or more of the following matter:
+Useful for:
 
-- privacy,
-- local-only data,
-- low-latency interaction,
-- offline availability,
-- high-volume lightweight requests,
-- tight integration with local services.
+- private context,
+- local data,
+- low-latency tasks,
+- local service integration,
+- offline work,
+- repeated lightweight calls.
 
 ### Cloud models
 
-Preferred when the task benefits from:
+Useful for:
 
-- stronger reasoning,
-- advanced coding ability,
-- long context,
-- high-quality multimodal understanding,
-- specialized tool support.
+- harder reasoning,
+- coding,
+- larger context,
+- multimodal work,
+- stronger tool use.
 
-The model is treated as a component chosen for the task, not as the identity of the system.
+The system chooses the model based on the task instead of forcing every task through the same model.
 
-## 5. Tool layer
+## 8. Tool layer
 
-Agents interact with external systems through constrained interfaces rather than arbitrary unrestricted access.
+Agents get useful capabilities through constrained tool interfaces.
 
-Examples include:
+Examples:
 
 - MCP tools,
-- application APIs,
 - GitHub,
-- knowledge-base integrations,
-- workflow automation,
-- local service APIs.
+- application APIs,
+- knowledge-base connectors,
+- local service APIs,
+- n8n workflows.
 
-The tool layer is where capability and risk meet, so permissions should be narrower than the model's reasoning capability.
+The important bit:
 
-## 6. Human-in-the-loop boundary
+> Reasoning capability and tool permissions are separate things.
 
-Human approval is part of the architecture.
+A model can be smart enough to understand a destructive command without automatically being allowed to run it.
 
-Examples of actions that should normally require confirmation include:
+## 9. Autonomy and approval
 
-- destructive infrastructure changes,
-- deleting or replacing important data,
-- sending messages externally,
-- publishing content,
-- modifying production systems,
-- security-sensitive configuration changes,
-- actions with financial or account impact.
+The default mode is autonomous.
 
-Read-only analysis and low-risk drafting can be more autonomous.
+The approval gate is for operations where failure would actually matter.
 
-This separation allows agents to do useful preparation without giving them unnecessary control.
+A simplified policy looks like this:
 
-## 7. Knowledge feedback loop
+| Action | Default |
+|---|---|
+| Read logs | Autonomous |
+| Search docs | Autonomous |
+| Summarize notes | Autonomous |
+| Update low-risk docs | Autonomous |
+| Run health checks | Autonomous |
+| Routine API workflow | Autonomous |
+| Low-risk reversible fix | Autonomous |
+| Delete important data | Approval |
+| Major firewall/network change | Approval |
+| Production deployment with risk | Approval |
+| External message with consequences | Approval |
+| Financial/account action | Approval |
 
-A solved problem should make the system better for the next similar problem.
+This keeps the system useful without making it reckless.
+
+## 10. Knowledge feedback loop
+
+Solved problems should improve the next attempt.
 
 ```mermaid
 flowchart LR
-    P[Problem] --> W[Work / Investigation]
+    P[Problem] --> W[Work]
     W --> R[Result]
     R --> D[Documentation]
     D --> K[Knowledge Base]
     K --> C[Future Context]
-    C --> P2[Next Similar Problem]
+    C --> N[Next similar problem]
 ```
 
 Examples:
 
-- a network incident becomes a troubleshooting runbook,
-- a research project becomes a decision note,
-- a repeated coding pattern becomes project documentation,
-- a manual process becomes an n8n workflow.
+- incident → runbook,
+- research → decision note,
+- recurring manual process → automation,
+- coding pattern → project docs.
 
-## 8. Failure containment
+## 11. Failure containment
 
-The system is designed under the assumption that models can be wrong.
+Models will eventually be wrong.
 
-Useful safeguards include:
+So the architecture assumes failure.
 
-- separating read and write capabilities,
-- limiting tool scope,
-- explicit approvals,
-- preserving logs and version history,
-- using Git for reversible changes,
-- preferring dry-runs where possible,
-- turning repeated procedures into deterministic automation.
+Useful safeguards:
 
-The architecture therefore optimizes for **recoverability and visibility**, not blind autonomy.
+- read/write separation where useful,
+- scoped credentials,
+- version history,
+- reversible changes,
+- dry-runs,
+- backups,
+- logs,
+- approval for high-impact actions,
+- deterministic automation for repeatable tasks.
 
-## 9. Current direction
+The goal is not perfect agents.
 
-Areas currently being explored include:
+The goal is a system that fails in boring, recoverable ways.
 
-- better semantic retrieval,
+## 12. Current direction
+
+Current experiments include:
+
+- semantic retrieval,
 - RAG over personal technical knowledge,
-- lightweight local models,
+- local models,
 - multimodal input,
-- richer agent-to-tool interfaces,
-- long-running task coordination,
-- clearer policy boundaries for autonomous actions.
+- richer tool use,
+- autonomous task chains,
+- better memory,
+- better exception handling,
+- clearer boundaries between agentic and deterministic work.
 
-The architecture is intentionally modular so individual models, tools and workflows can change without redesigning the whole system.
+The components are intentionally modular so models and tools can be swapped without rebuilding the whole stack.
