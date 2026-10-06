@@ -1,6 +1,6 @@
 # Personal AI Infrastructure
 
-This repo is a public-safe map of the AI stack I use for research, knowledge, infrastructure, coding and automation.
+This repo is a public-safe map of the AI stack I use for research, knowledge, infrastructure, coding, business operations, media and automation.
 
 It is **not** the actual deployment repo. No secrets, no private configs, no production topology, no prompt dump. Just the architecture, the workflows and the ideas behind it.
 
@@ -12,7 +12,7 @@ The short version:
 
 I use AI for a lot more than chat.
 
-Some tasks are simple and repetitive. Some need context. Some need tools. Some need access to code, notes, infrastructure or external services.
+Some tasks are simple and repetitive. Some need context. Some need tools. Some need access to code, notes, infrastructure, business workflows, media libraries or external services.
 
 Trying to make one giant assistant do all of that quickly turns into spaghetti.
 
@@ -34,12 +34,18 @@ flowchart TD
     O --> K[Knowledge Agent]
     O --> I[Infrastructure Agent]
     O --> C[Coding Agent]
+    O --> B[Automotive Operations Agent]
+    O --> M[Music Agent]
+    O --> P[Photo Agent]
     O --> D[Deterministic Workflows]
 
     R --> RS[Search / Sources / APIs]
     K --> KB[Obsidian / Knowledge Base]
     I --> IT[Infra Tools / Logs / Services]
     C --> GH[GitHub / Dev Tools]
+    B --> BO[Business Data / CRM / Workflows]
+    M --> MU[Music Library / Playback / Discovery]
+    P --> PH[Photo Library / Metadata / Search]
     D --> N8N[n8n / Scripts / APIs]
 
     LM[Local LLMs] <--> O
@@ -134,6 +140,59 @@ The point is not "AI writes code for me."
 
 The point is that development becomes part of a larger system: problem → context → implementation → review → documentation.
 
+### Automotive operations agent
+
+This agent lives on the business side of the stack.
+
+It is built around a real vehicle-sales workflow and helps with things such as:
+
+- vehicle lifecycle tracking,
+- CRM and lead handling,
+- listing preparation,
+- marketing drafts,
+- partner and customer workflows,
+- finance and reporting,
+- keeping data consistent across several parts of the process.
+
+The interesting bit is not the automotive domain itself.
+
+It is that the agent sits between **real business operations and software**, where a lot of small manual steps can be replaced with structured workflows, automation and context-aware assistance.
+
+Anything involving sensitive business data stays private and sanitized in this repo.
+
+### Music agent
+
+The music agent handles natural-language music requests and acts as a smarter layer on top of playback and discovery.
+
+Typical jobs:
+
+- understand requests that are not exact song titles,
+- choose music based on mood, context or intent,
+- translate natural language into playback actions,
+- fall back to deterministic commands when the request is obvious,
+- connect music control with automations and smart-home workflows.
+
+Clear command like "play X"? No reason to burn tokens.
+
+Something like "play something relaxed but not sleepy"? That is where the agent earns its keep.
+
+### Photo agent
+
+The photo agent is built around a private family photo collection.
+
+Typical jobs:
+
+- natural-language photo search,
+- metadata search,
+- face-aware retrieval,
+- semantic search,
+- visual descriptions,
+- combining multiple weak signals into a useful result.
+
+This is one of the main local-first use cases in the stack because photo libraries can contain extremely personal data.
+
+The public repo only describes the architecture. No images, names, face data or private metadata are included.
+
 ## Agents vs deterministic workflows
 
 One rule I keep coming back to:
@@ -145,7 +204,10 @@ So:
 - cron-like stuff stays deterministic,
 - API glue stays deterministic,
 - repeatable transformations stay deterministic,
+- exact playback commands stay deterministic,
+- structured business sync stays deterministic,
 - ambiguous decisions go to agents,
+- semantic search goes to agents/models,
 - exceptions go to agents,
 - weird edge cases go to agents.
 
@@ -191,6 +253,8 @@ At a high level, the system connects to tools such as:
 - **APIs**
 - **Telegram**
 - local services and self-hosted infrastructure
+- business systems
+- media libraries
 
 The public repo only shows the shape of the system, not the keys to the kingdom.
 
@@ -203,6 +267,20 @@ Ask a question, route it to research, compare sources, extract the useful bits, 
 ### Infra issue → diagnose → fix → runbook
 
 Collect evidence, inspect logs, narrow the cause, apply low-risk fixes automatically, escalate only if the next step has a real blast radius, verify the result and save the incident as a runbook.
+
+### Business workflow → agent + automation
+
+Structured data moves through deterministic workflows. The agent handles the fuzzy parts: drafting, context, prioritization, unusual cases and questions that do not fit a clean rule.
+
+### Natural-language music request → playback
+
+Exact command? Route it directly.
+
+Messy human request? Let the music agent interpret it, choose something appropriate and hand the final action to the playback layer.
+
+### Photo question → semantic retrieval
+
+A vague request like "find photos from that winter trip where we were outside at night" can combine metadata, semantic search, face context and visual understanding without exposing the library publicly.
 
 ### Idea → prototype → repo
 
@@ -242,6 +320,8 @@ This repository does not contain:
 - private agent instructions,
 - exact permissions,
 - personal notes,
+- private photo data,
+- customer or partner data,
 - business-confidential data,
 - production configs.
 
@@ -265,6 +345,9 @@ Things I am actively experimenting with:
 - tool use,
 - autonomous workflows,
 - better memory,
+- local/private photo intelligence,
+- natural-language media control,
+- business workflow agents,
 - better boundaries between agents and deterministic automation.
 
 The system is never really "finished".
