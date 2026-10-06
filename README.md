@@ -1,184 +1,272 @@
 # Personal AI Infrastructure
 
-A high-level architecture case study of the personal AI system I use to connect research, knowledge management, infrastructure work, software development and automation.
+This repo is a public-safe map of the AI stack I use for research, knowledge, infrastructure, coding and automation.
 
-This repository intentionally focuses on **system design, workflows and lessons learned** rather than source code or private configuration.
+It is **not** the actual deployment repo. No secrets, no private configs, no production topology, no prompt dump. Just the architecture, the workflows and the ideas behind it.
 
-## Why I built it
+The short version:
 
-I use AI across very different kinds of work: researching a topic, maintaining technical notes, troubleshooting infrastructure, working with repositories, automating repetitive tasks and turning ideas into working tools.
+> Automate the boring stuff. Use agents where context matters. Let them run on their own most of the time. Ask for human approval only when the blast radius gets real.
 
-A single general-purpose assistant quickly becomes hard to manage. Different tasks need different context, tools, permissions and levels of autonomy.
+## Why this exists
 
-The system therefore follows a simple idea:
+I use AI for a lot more than chat.
 
-> Use deterministic automation when the rules are clear. Use agents when interpretation and context are required. Keep a human in the loop for important decisions.
+Some tasks are simple and repetitive. Some need context. Some need tools. Some need access to code, notes, infrastructure or external services.
 
-## System at a glance
+Trying to make one giant assistant do all of that quickly turns into spaghetti.
 
-The system is organized around an **orchestrator** that receives a request, decides what kind of work is needed and delegates it to a specialized agent or deterministic workflow.
+So I split the system into a few specialized parts:
+
+- one orchestrator,
+- a set of focused agents,
+- deterministic automations where rules are clear,
+- local and cloud models depending on the job,
+- and approval gates only for actions that can actually hurt something.
+
+## The stack at a glance
 
 ```mermaid
 flowchart TD
-    U[User] --> O[Orchestrator]
+    U[User / Interface] --> O[Orchestrator]
 
     O --> R[Research Agent]
-    O --> K[Knowledge / Librarian Agent]
+    O --> K[Knowledge Agent]
     O --> I[Infrastructure Agent]
     O --> C[Coding Agent]
     O --> D[Deterministic Workflows]
 
-    R --> T[Tools & External Sources]
-    K --> N[Obsidian / Knowledge Base]
-    I --> S[Infrastructure Tools]
-    C --> G[GitHub / Development Tools]
-    D --> A[n8n / APIs / Automations]
+    R --> RS[Search / Sources / APIs]
+    K --> KB[Obsidian / Knowledge Base]
+    I --> IT[Infra Tools / Logs / Services]
+    C --> GH[GitHub / Dev Tools]
+    D --> N8N[n8n / Scripts / APIs]
 
-    L[Local LLMs] <--> O
-    CL[Cloud LLMs] <--> O
+    LM[Local LLMs] <--> O
+    CM[Cloud Models] <--> O
 
-    R --> H[Human Review]
-    K --> H
-    I --> H
-    C --> H
-    D --> H
+    O --> G{High-impact action?}
+    G -->|No| AUTO[Autonomous execution]
+    G -->|Yes| HUMAN[Human approval]
+    HUMAN --> EXEC[Execute]
+    AUTO --> EXEC
 ```
 
-## Main components
+## Main pieces
 
 ### Orchestrator
 
-The orchestrator is the main entry point. Its job is not to do everything itself, but to determine:
+The orchestrator is the traffic controller.
 
-- what the user is trying to accomplish,
-- whether the task is deterministic or agentic,
-- which specialist has the right context and tools,
-- whether local or cloud inference is more appropriate,
-- and where human approval is required.
+It decides:
+
+- what the task actually is,
+- whether it should go to an agent or a deterministic workflow,
+- which specialist should handle it,
+- which model makes sense,
+- which tools are needed,
+- and whether the task is safe to run automatically.
+
+It is not supposed to know everything. Its job is to route work well.
 
 ### Research agent
 
-Used for open-ended research, source comparison and turning large amounts of information into practical recommendations.
+Used for messy, open-ended questions.
 
-Typical outputs include:
+Typical jobs:
 
-- research briefs,
-- technology comparisons,
-- implementation options,
-- risk/benefit summaries,
-- and structured notes for later use.
+- compare technologies,
+- research a problem,
+- collect useful sources,
+- summarize long material,
+- find trade-offs,
+- prepare a shortlist,
+- turn research into something actionable.
 
-### Knowledge / librarian agent
+### Knowledge agent
 
-Connects AI work with the personal knowledge base.
+Keeps useful work from disappearing into chat history.
 
-Typical responsibilities include:
+Typical jobs:
 
-- retrieving relevant context,
-- organizing notes,
-- preparing summaries,
-- maintaining structured documentation,
-- and turning completed work into reusable knowledge.
+- retrieve relevant notes,
+- connect new findings with older work,
+- create summaries,
+- update documentation,
+- turn solved problems into reusable knowledge,
+- keep the knowledge base from becoming a digital junk drawer.
 
 ### Infrastructure agent
 
-Focused on diagnostics and operational work around servers, networking, containers and self-hosted services.
+Used for servers, containers, networking and self-hosted services.
 
-The agent can help investigate a problem and prepare safe next steps, but important or destructive actions remain approval-gated.
+Typical jobs:
+
+- inspect logs,
+- check health,
+- diagnose failures,
+- compare expected vs actual state,
+- run safe checks,
+- apply low-risk fixes,
+- create troubleshooting notes.
+
+It can operate autonomously for normal diagnostics and routine actions.
+
+Approval is reserved for things with real impact: destructive changes, major network/security changes, risky production changes or actions that could cause downtime or data loss.
 
 ### Coding agent
 
-Used for repository analysis, implementation planning, debugging and AI-assisted development.
+Used for repository work and AI-assisted development.
 
-The goal is not autonomous code generation for its own sake. The useful part is connecting code work with the broader system: requirements, documentation, testing, Git history and real operational needs.
+Typical jobs:
 
-## Local and cloud models
+- understand an unfamiliar codebase,
+- locate the right implementation area,
+- debug bugs,
+- prepare patches,
+- review diffs,
+- work with Git history,
+- write tests,
+- update docs,
+- connect technical work back to the original problem.
 
-The system deliberately uses both.
+The point is not "AI writes code for me."
 
-**Local models** are useful when privacy, low latency, local integrations or offline availability matter.
+The point is that development becomes part of a larger system: problem → context → implementation → review → documentation.
 
-**Cloud models** are used when a task benefits from stronger reasoning, coding ability, larger context windows or specialized capabilities.
+## Agents vs deterministic workflows
 
-Routing between them is based on the task rather than using one model for everything.
+One rule I keep coming back to:
+
+> If a workflow can be expressed as a reliable rule, it probably does not need an LLM.
+
+So:
+
+- cron-like stuff stays deterministic,
+- API glue stays deterministic,
+- repeatable transformations stay deterministic,
+- ambiguous decisions go to agents,
+- exceptions go to agents,
+- weird edge cases go to agents.
+
+This keeps the system faster, cheaper and easier to reason about.
+
+## Local vs cloud models
+
+I use both.
+
+### Local models
+
+Best fit when I care about:
+
+- privacy,
+- local data,
+- low latency,
+- offline use,
+- local integrations,
+- high-volume lightweight tasks.
+
+### Cloud models
+
+Best fit when I need:
+
+- stronger reasoning,
+- better coding,
+- long context,
+- stronger multimodal capability,
+- advanced tool use.
+
+The system is model-agnostic on purpose.
+
+Models change fast. The architecture should survive the next model release.
 
 ## Integrations
 
-At a high level, the system connects with tools such as:
+At a high level, the system connects to tools such as:
 
-- **Obsidian** for long-term knowledge and runbooks,
-- **n8n** for deterministic automation and integrations,
-- **GitHub** for repository and development workflows,
-- **MCP / APIs** for structured tool access,
-- **Telegram** and similar interfaces for lightweight interaction,
-- local services and self-hosted infrastructure where appropriate.
+- **Obsidian**
+- **n8n**
+- **GitHub**
+- **MCP**
+- **APIs**
+- **Telegram**
+- local services and self-hosted infrastructure
 
-No private endpoints, credentials or internal network details are included in this repository.
+The public repo only shows the shape of the system, not the keys to the kingdom.
 
 ## Example workflows
 
-A few representative workflows:
+### Research → decision → knowledge
 
-1. **Research → decision → knowledge**
-   - A question is routed to research.
-   - Sources are compared and summarized.
-   - The result is reviewed.
-   - Useful conclusions are converted into a permanent note or project plan.
+Ask a question, route it to research, compare sources, extract the useful bits, then save the result so the same work does not have to be rediscovered later.
 
-2. **Infrastructure incident → diagnosis → runbook**
-   - Symptoms and logs are collected.
-   - The infrastructure agent narrows the likely causes.
-   - Commands or changes are proposed one step at a time.
-   - Risky actions require approval.
-   - The resolution becomes reusable troubleshooting documentation.
+### Infra issue → diagnose → fix → runbook
 
-3. **Idea → prototype → repository**
-   - An idea is clarified into requirements.
-   - The coding workflow creates or modifies an implementation.
-   - GitHub is used for versioned changes and review.
-   - Documentation is updated alongside the implementation.
+Collect evidence, inspect logs, narrow the cause, apply low-risk fixes automatically, escalate only if the next step has a real blast radius, verify the result and save the incident as a runbook.
 
-4. **Repeated process → deterministic automation**
-   - If a workflow becomes predictable, it is moved away from an LLM where practical.
-   - n8n, scripts or APIs handle repeatable steps.
-   - AI remains only where judgment or unstructured input is useful.
+### Idea → prototype → repo
 
-More detail is available in [WORKFLOWS.md](WORKFLOWS.md).
+Turn a rough idea into requirements, build the smallest useful version, test it, commit it, document it and keep iterating.
 
-## Design principles
+### Manual task → automation
 
-- **Deterministic first** when rules are known.
-- **Agents for ambiguity**, not for every task.
-- **Human approval for consequential actions.**
-- **Least necessary access** to tools and data.
+If the same task keeps appearing, move stable parts into n8n, scripts or direct API calls. Let the agent handle only the parts that still require judgment.
+
+More detail: [WORKFLOWS.md](WORKFLOWS.md)
+
+## Design rules
+
+A few rules that keep the system sane:
+
+- **Autonomous by default, approval-gated when impact is high.**
+- **Deterministic first when the rules are obvious.**
+- **Agents for ambiguity, not for everything.**
 - **Local-first when privacy matters.**
-- **Documentation is part of the workflow**, not an afterthought.
-- **Small specialized contexts** are easier to control than one giant assistant.
-- **Build, observe, improve** rather than trying to design the perfect system up front.
+- **Small specialized contexts beat one giant mega-prompt.**
+- **Version everything important.**
+- **Prefer reversible actions.**
+- **Turn solved problems into documentation.**
+- **Treat models as replaceable components.**
+- **Build, test, observe, improve.**
 
-## What this repository does not contain
+## What is intentionally missing
 
-This is intentionally not a deployment repository.
+This repository does not contain:
 
-It does **not** include:
+- API keys,
+- credentials,
+- private IPs,
+- internal hostnames,
+- VPN or remote-access config,
+- full prompts,
+- private agent instructions,
+- exact permissions,
+- personal notes,
+- business-confidential data,
+- production configs.
 
-- API keys or credentials,
-- system prompts or private agent instructions,
-- private IP addresses or internal domains,
-- VPN or remote-access configuration,
-- exact permission policies,
-- personal knowledge-base content,
-- confidential business data,
-- production configuration files.
+For the boring-but-important details, see [SECURITY.md](SECURITY.md).
 
-See [SECURITY.md](SECURITY.md) for the publication boundary.
+## Docs
 
-## Documentation
+- [ARCHITECTURE.md](ARCHITECTURE.md) — how the system is wired
+- [WORKFLOWS.md](WORKFLOWS.md) — how work moves through it
+- [SECURITY.md](SECURITY.md) — what stays private and where approval kicks in
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — components, routing and model strategy
-- [WORKFLOWS.md](WORKFLOWS.md) — representative end-to-end workflows
-- [SECURITY.md](SECURITY.md) — what is intentionally kept private
+## Current rabbit holes
 
-## Status
+Things I am actively experimenting with:
 
-This system is continuously evolving. Current areas of experimentation include local LLMs, semantic search, retrieval, multimodal models, agent/tool orchestration and better boundaries between autonomous and deterministic workflows.
+- local LLMs,
+- semantic search,
+- RAG,
+- multimodal input,
+- agent orchestration,
+- tool use,
+- autonomous workflows,
+- better memory,
+- better boundaries between agents and deterministic automation.
+
+The system is never really "finished".
+
+That is kind of the point.
