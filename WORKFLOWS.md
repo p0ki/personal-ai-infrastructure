@@ -131,12 +131,11 @@ Make music control feel human without making simple commands unnecessarily compl
 **DJ Viola** is the working example: a self-hosted music controller with a mobile-first home-network remote, independent room queues and separate listener preferences.
 
 ```mermaid
-flowchart LR
+flowchart TD
     Q[Song or style request] --> C{Known request?}
-    C -->|Yes| D[Deterministic plan]
+    C -->|Yes| D[Validate and plan deterministically]
     C -->|No| M[Bounded model interpretation]
-    M --> V[Validate proposal]
-    V --> D
+    M --> D
     D --> S[Music catalogue search]
     S --> E[Filter, rank and verify sources]
     E --> P[Room queue and playback]
