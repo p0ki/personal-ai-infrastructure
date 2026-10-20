@@ -128,29 +128,70 @@ The business process stays structured. The agent fills the gaps where rigid rule
 
 Make music control feel human without making simple commands unnecessarily complicated.
 
+**DJ Viola** is the working example: a self-hosted music controller with a mobile-first home-network remote, independent room queues and separate listener preferences.
+
 ```mermaid
 flowchart LR
-    Q[Music request] --> C{Exact command?}
-    C -->|Yes| D[Deterministic playback]
-    C -->|No| M[Music Agent]
-    M --> S[Interpret mood / intent]
-    S --> P[Choose music]
-    P --> D
+    Q[Song or style request] --> C{Known request?}
+    C -->|Yes| D[Deterministic plan]
+    C -->|No| M[Bounded model interpretation]
+    M --> V[Validate proposal]
+    V --> D
+    D --> S[Music catalogue search]
+    S --> E[Filter, rank and verify sources]
+    E --> P[Room queue and playback]
+    F[Stored listener feedback] --> E
 ```
 
-Examples:
+### How it works
+
+1. The remote supplies the selected room and listener profile. Messaging can reach the same dispatcher through a validated Matrix/n8n path; the web remote does not depend on messaging availability.
+2. Explicit playback controls and supported genre/mood presets use deterministic parsing. A model is a fallback for less structured wishes, not a requirement for every command.
+3. The interpretation layer proposes a bounded song/style query or asks for clarification. A local model or an explicitly enabled cloud provider can fill this role; neither gets arbitrary tools or shell access.
+4. Exact songs and styles take different discovery paths. A style request builds a multi-track catalogue plan instead of pretending that a genre is a song title. Explicit regional rock requests use constrained artist selection to avoid confusing Slovenian music with Slovak results.
+5. Recording eligibility and an initial audio source are checked before new playback starts. Unavailable sources produce a bounded failure rather than an unrelated substitute.
+6. The controller owns execution, per-room queues and continuation. Listener feedback influences later selection; it does not give the model control over devices or permissions.
+
+Pause, resume, previous/next, queue edits and software volume go directly to the controller. Internet radio uses a station catalogue without song resolution or LLM calls.
+
+### Recording choice is a rule, not a model guess
+
+- Studio recordings are the default. Known live recordings, music videos, covers, remixes and compilation uploads are filtered before ranking.
+- An explicit `live` or `v živo` modifier on a song/style request selects recorded performances instead. Live evidence must exist in the metadata; a studio recording is not a silent fallback. Marked performance videos can supply audio in this mode, but running livestreams are not treated as recorded songs.
+- The choice survives interpretation, suggestions and queued tracks. Song titles or artist names that happen to contain “Live” do not automatically enable it.
+- Source checks use metadata, not audio fingerprinting. Incorrectly labelled uploads remain a limitation.
+
+### Everyday use
+
+- The phone controls playback; audio stays on the selected room's speakers.
+- Listener profiles keep separate likes, dislikes and discovery preferences. Ratings are stored locally and used for ranking/exclusions, not model fine-tuning. A dislike does not interrupt the current song; automatic selection avoids it, while an explicit request can still play it.
+- Queues support move, remove and play-selected actions, plus previous-track replay. DJ software volume is separate from the receiver's physical volume setting.
+- Song suggestions and existing YouTube playlist search are distinct. Selecting a result does not start playback: play/append is explicit. Playlist imports preserve order, skip ineligible entries and report truncation; imports retain the studio default.
+- Radio offers frequent choices and an expandable station catalogue without AI interpretation.
+
+Examples of requests and searches:
 
 ```text
-"Play Artist - Song"
-→ direct playback
+Explicit song command: "predvajaj Artist - Song"
+→ resolve a studio recording → verify source → play
 
-"Give me something chill for the terrace"
-→ interpret context → choose → play
+Explicit song command: "predvajaj Artist - Song live"
+→ resolve a recorded performance → verify source → play
+
+Style request: "predvajaj slovenski rock"
+→ regional artist directions → catalogue plan → verify first source → queue
+
+Playlist search: "best of metal"
+→ existing playlists → explicit play/append → filtered, ordered import
 ```
 
-The agent deals with taste, ambiguity and context.
+### Boundaries and verification
 
-The playback layer stays deterministic.
+The home-network remote is a shared control surface. Profiles are taste selectors, not authenticated accounts or an authorization boundary. It is intended for a trusted LAN, not Internet exposure. Software playback state does not by itself prove speaker audibility.
+
+Parser, source-policy, queue, web and workflow regressions are checked with isolated tests. Playback changes use backups, health checks and a reversible rollout; this public repository contains none of the deployment configuration, listening history, account details or internal endpoints.
+
+The model interprets the wish. Normal software decides what may run and performs the playback.
 
 ---
 
