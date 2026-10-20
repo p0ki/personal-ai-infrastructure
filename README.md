@@ -162,19 +162,22 @@ Anything involving sensitive business data stays private and sanitized in this r
 
 ### Music agent
 
-The music agent handles natural-language music requests and acts as a smarter layer on top of playback and discovery.
+The music workflow combines a mobile home-network remote, independent room queues and listener preferences with optional natural-language interpretation.
 
-Typical jobs:
+The split is deliberate:
 
-- understand requests that are not exact song titles,
-- choose music based on mood, context or intent,
-- translate natural language into playback actions,
-- fall back to deterministic commands when the request is obvious,
-- connect music control with automations and smart-home workflows.
+- known controls and supported style presets use deterministic rules first,
+- a model helps interpret less structured wishes or asks for clarification,
+- normal software searches the catalogue, applies preferences and verifies sources,
+- the playback controller owns room selection, queues and software volume.
 
-Clear command like "play X"? No reason to burn tokens.
+Listener profiles keep separate likes, dislikes and discovery preferences. Song search, playlist imports and internet radio are distinct paths; selecting a result does not start playback until an explicit play or append action.
 
-Something like "play something relaxed but not sleepy"? That is where the agent earns its keep.
+Studio recordings are the default. An explicit live request selects recorded performances, subject to metadata and source checks. The model does not get shell access or unrestricted device control.
+
+The remote is intended for a trusted home network. Profiles select taste, not authenticated accounts or separate control permissions.
+
+More detail: [music workflow](WORKFLOWS.md#4-natural-language-music-request--playback).
 
 ### Photo agent
 
@@ -276,7 +279,7 @@ Structured data moves through deterministic workflows. The agent handles the fuz
 
 Exact command? Route it directly.
 
-Messy human request? Let the music agent interpret it, choose something appropriate and hand the final action to the playback layer.
+Less structured wish? Interpret it as a bounded song or style query, then let normal software search, filter, rank and verify sources before changing playback. Listener feedback influences later selection; execution stays deterministic.
 
 ### Photo question → semantic retrieval
 

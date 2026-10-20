@@ -128,7 +128,7 @@ The business process stays structured. The agent fills the gaps where rigid rule
 
 Make music control feel human without making simple commands unnecessarily complicated.
 
-**DJ Viola** is the working example: a self-hosted music controller with a mobile-first home-network remote, independent room queues and separate listener preferences.
+A self-hosted music controller combines a mobile-first home-network remote, independent room queues and separate listener preferences.
 
 ```mermaid
 flowchart TD
@@ -144,10 +144,10 @@ flowchart TD
 
 ### How it works
 
-1. The remote supplies the selected room and listener profile. Messaging can reach the same dispatcher through a validated Matrix/n8n path; the web remote does not depend on messaging availability.
+1. The remote supplies the selected room and listener profile. Messaging can reach the same dispatcher through a validated automation bridge; the web remote does not depend on messaging availability.
 2. Explicit playback controls and supported genre/mood presets use deterministic parsing. A model is a fallback for less structured wishes, not a requirement for every command.
 3. The interpretation layer proposes a bounded song/style query or asks for clarification. A local model or an explicitly enabled cloud provider can fill this role; neither gets arbitrary tools or shell access.
-4. Exact songs and styles take different discovery paths. A style request builds a multi-track catalogue plan instead of pretending that a genre is a song title. Explicit regional rock requests use constrained artist selection to avoid confusing Slovenian music with Slovak results.
+4. Exact songs and styles take different discovery paths. A style request builds a multi-track catalogue plan instead of pretending that a genre is a song title. Regional requests use constrained artist selection rather than treating similar scene names as interchangeable.
 5. Recording eligibility and an initial audio source are checked before new playback starts. Unavailable sources produce a bounded failure rather than an unrelated substitute.
 6. The controller owns execution, per-room queues and continuation. Listener feedback influences later selection; it does not give the model control over devices or permissions.
 
@@ -156,7 +156,7 @@ Pause, resume, previous/next, queue edits and software volume go directly to the
 ### Recording choice is a rule, not a model guess
 
 - Studio recordings are the default. Known live recordings, music videos, covers, remixes and compilation uploads are filtered before ranking.
-- An explicit `live` or `v živo` modifier on a song/style request selects recorded performances instead. Live evidence must exist in the metadata; a studio recording is not a silent fallback. Marked performance videos can supply audio in this mode, but running livestreams are not treated as recorded songs.
+- An explicit live modifier on a song/style request selects recorded performances instead. Live evidence must exist in the metadata; a studio recording is not a silent fallback. Marked performance videos can supply audio in this mode, but running livestreams are not treated as recorded songs.
 - The choice survives interpretation, suggestions and queued tracks. Song titles or artist names that happen to contain “Live” do not automatically enable it.
 - Source checks use metadata, not audio fingerprinting. Incorrectly labelled uploads remain a limitation.
 
@@ -164,23 +164,23 @@ Pause, resume, previous/next, queue edits and software volume go directly to the
 
 - The phone controls playback; audio stays on the selected room's speakers.
 - Listener profiles keep separate likes, dislikes and discovery preferences. Ratings are stored locally and used for ranking/exclusions, not model fine-tuning. A dislike does not interrupt the current song; automatic selection avoids it, while an explicit request can still play it.
-- Queues support move, remove and play-selected actions, plus previous-track replay. DJ software volume is separate from the receiver's physical volume setting.
-- Song suggestions and existing YouTube playlist search are distinct. Selecting a result does not start playback: play/append is explicit. Playlist imports preserve order, skip ineligible entries and report truncation; imports retain the studio default.
+- Queues support move, remove and play-selected actions, plus previous-track replay. Playback software volume is separate from the receiver's physical volume setting.
+- Song suggestions and existing playlist search are distinct. Selecting a result does not start playback: play/append is explicit. Playlist imports preserve order, skip ineligible entries and report truncation; imports retain the studio default.
 - Radio offers frequent choices and an expandable station catalogue without AI interpretation.
 
 Examples of requests and searches:
 
 ```text
-Explicit song command: "predvajaj Artist - Song"
+Exact song request
 → resolve a studio recording → verify source → play
 
-Explicit song command: "predvajaj Artist - Song live"
+Explicit recorded-live request
 → resolve a recorded performance → verify source → play
 
-Style request: "predvajaj slovenski rock"
+Regional style request
 → regional artist directions → catalogue plan → verify first source → queue
 
-Playlist search: "best of metal"
+Existing playlist search
 → existing playlists → explicit play/append → filtered, ordered import
 ```
 
