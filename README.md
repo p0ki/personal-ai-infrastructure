@@ -28,37 +28,32 @@ So I split the system into a few specialized parts:
 
 ```mermaid
 flowchart TD
-    U[User / Interface] --> O[Orchestrator]
+    U[Me: Telegram / Discord / Desktop] --> T[Triglav UM — dispatcher]
 
-    O --> R[Research Agent]
-    O --> K[Knowledge Agent]
-    O --> I[Infrastructure Agent]
-    O --> C[Coding Agent]
-    O --> B[Automotive Operations Agent]
-    O --> M[Music Agent]
-    O --> P[Photo Agent]
-    O --> D[Deterministic Workflows]
+    T -->|Kanban task| C[coding]
+    T -->|Kanban task| I[infra]
+    T -->|Kanban task| R[researcher]
+    T -->|Kanban task| L[librarian]
+    T -->|Kanban task| P[postar — mail]
+    T -->|Kanban task| A[avtoprem — protected mode]
+    T -->|Kanban task| M[dj-viola — music]
+    T --> D[Deterministic workflows — n8n / scripts]
 
-    R --> RS[Search / Sources / APIs]
-    K --> KB[Obsidian / Knowledge Base]
-    I --> IT[Infra Tools / Logs / Services]
-    C --> GH[GitHub / Dev Tools]
-    B --> BO[Business Data / CRM / Workflows]
-    M --> MU[Music Library / Playback / Discovery]
-    P --> PH[Photo Library / Metadata / Search]
-    D --> N8N[n8n / Scripts / APIs]
+    L --> KB[Obsidian Second Brain + LLM Wiki]
+    SB[Source Broker] --> W[Protected Writer — single writer, hash journal] --> KB
+    KB --> RAG[RAG index]
 
-    LM[Local LLMs] <--> O
-    CM[Cloud Models] <--> O
+    T <--> MEM[(Per-profile memory — Honcho)]
+    C & I & R & L & P & A & M <--> MEM
 
-    O --> G{High-impact action?}
-    G -->|No| AUTO[Autonomous execution]
-    G -->|Yes| HUMAN[Human approval]
-    HUMAN --> EXEC[Execute]
-    AUTO --> EXEC
+    T --> G{High-impact action?}
+    G -->|No| AUTO[Run]
+    G -->|Yes| HUMAN[Ask me first]
 ```
 
 ## Main pieces
+
+The roles below are described in general terms; the current profile list is in the roster above. Photo search now runs as a deterministic n8n workflow plus a private web gallery (MemoryLane) rather than as an agent.
 
 ### Orchestrator
 
@@ -195,6 +190,33 @@ Typical jobs:
 This is one of the main local-first use cases in the stack because photo libraries can contain extremely personal data.
 
 The public repo only describes the architecture. No images, names, face data or private metadata are included.
+
+## Agent roster (November 2026)
+
+| Profile | Job | Model tier |
+|---|---|---|
+| **Triglav UM** | Intake, planning, routing, verification, reporting. Does not do the work itself. | top |
+| **coding** | Code, terminal work, repos | top |
+| **infra** | Home infrastructure, network, diagnostics | top |
+| **researcher** | Research, comparisons, web data | mid |
+| **librarian** | Second Brain and wiki curation, retrieval | mid |
+| **postar** | Mailbox triage and drafts (never sends without approval) | light/mid |
+| **avtoprem** | Business operations in protected mode: read-only and drafts, no production writes | mid |
+| **dj-viola** | Music requests, playback, radio | light |
+
+Each profile has its own model tier and reasoning effort. The strongest model goes where mistakes are expensive (dispatch, code, infrastructure), not everywhere. Short low-risk subtasks run on a cheaper delegate model.
+
+## How work moves
+
+- **Kanban, not chat threads.** Anything with an owner, a side effect or more than a few minutes of work becomes a task assigned to the profile that can actually do it. Triglav checks capabilities before assigning. If no profile has the needed permission, it changes the plan or asks me instead of creating a task that is bound to fail.
+- **Blocked tasks surface.** A daily digest lists blocked and stale tasks so nothing waits silently for weeks.
+- **Verification before "done".** Triglav checks the specialist's result before reporting back.
+
+## Memory and knowledge
+
+- **Per-profile memory (Honcho).** Each profile keeps its own long-term memory, so the music agent does not carry infrastructure context and vice versa. Today it runs on Honcho Cloud; a local Honcho pilot is staged for later.
+- **One writer for the knowledge base.** New sources go through a Source Broker into a single **Protected Writer**, the only process allowed to write the LLM wiki and source folders. It keeps a hash journal: an edit from anywhere else breaks the chain and stops ingest. Agents propose; the writer commits.
+- **RAG on top.** The wiki and selected vault folders are indexed for retrieval, so agents answer from my notes instead of guessing.
 
 ## Agents vs deterministic workflows
 
@@ -356,3 +378,7 @@ Things I am actively experimenting with:
 The system is never really "finished".
 
 That is kind of the point.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
